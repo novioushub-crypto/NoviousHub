@@ -73,7 +73,7 @@ export default function CategoryPage() {
           className="relative z-20 text-center text-white px-4"
         >
           <h1 className="text-5xl md:text-6xl font-display font-bold mb-4">
-            {info?.title || info?.name}
+            {info?.title}
           </h1>
           <p className="text-xl text-surface max-w-2xl mx-auto">
             {info?.description}

@@ -1,21 +1,11 @@
 from pathlib import Path
 from datetime import timedelta
 import dj_database_url
-from decouple import Config, RepositoryEnv
+from decouple import config
 import sentry_sdk
 import os
 
 BASE_DIR = Path(__file__).resolve().parent.parent.parent
-
-# Load environment variables from .env.local or .env
-env_file = BASE_DIR / '.env.local'
-if not env_file.exists():
-    env_file = BASE_DIR / '.env'
-
-if env_file.exists():
-    config = Config(RepositoryEnv(str(env_file)))
-else:
-    config = Config()
 
 SECRET_KEY = config('SECRET_KEY', default='django-insecure-dev-key-change-in-production')
 DEBUG = config('DEBUG', default=True, cast=bool)
