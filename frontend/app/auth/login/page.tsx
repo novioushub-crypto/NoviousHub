@@ -31,7 +31,7 @@ export default function LoginPage() {
     // Initialize Google Sign-In when script loads
     if (window.google && googleLoaded) {
       window.google.accounts.id.initialize({
-        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID,
+        client_id: process.env.NEXT_PUBLIC_GOOGLE_CLIENT_ID || '',
         callback: handleGoogleLogin,
       })
       
@@ -52,7 +52,7 @@ export default function LoginPage() {
     setError('')
 
     try {
-      const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL}/auth/google-login/`, {
+      const result = await fetch(`${process.env.NEXT_PUBLIC_API_URL || 'http://localhost:8000/api/v1'}/auth/google-login/`, {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
