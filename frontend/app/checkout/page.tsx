@@ -1,6 +1,6 @@
 'use client'
 
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useCartStore } from '@/lib/store/cartStore'
 import { useRouter } from 'next/navigation'
 import { Loader2 } from 'lucide-react'
@@ -10,6 +10,12 @@ export default function CheckoutPage() {
   const { items, getTotalPrice } = useCartStore()
   const [loading, setLoading] = useState(false)
   const [step, setStep] = useState(1)
+  const [mounted, setMounted] = useState(false)
+
+  useEffect(() => {
+    setMounted(true)
+    useCartStore.persist.rehydrate()
+  }, [])
 
   const [formData, setFormData] = useState({
     email: '',
@@ -33,8 +39,21 @@ export default function CheckoutPage() {
     setLoading(false)
   }
 
+  useEffect(() => {
+    if (mounted && items.length === 0) {
+      router.push('/cart')
+    }
+  }, [mounted, items.length, router])
+
+  if (!mounted) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 bg-surface dark:bg-surface-dark flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    )
+  }
+
   if (items.length === 0) {
-    router.push('/cart')
     return null
   }
 

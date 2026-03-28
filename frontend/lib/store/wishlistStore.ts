@@ -85,6 +85,7 @@ export const useWishlistStore = create<WishlistStore>()(
     {
       name: 'wishlist-storage',
       partialize: (state) => ({ items: state.items }),
+      skipHydration: true,
     }
   )
 )
