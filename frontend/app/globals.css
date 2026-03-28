@@ -1,0 +1,72 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@layer base {
+  :root {
+    --brand: #1A1A2E;
+    --accent: #E94560;
+    --accent-hover: #C73652;
+    --gold: #F5A623;
+    --surface: #F8F4EF;
+    --surface-dark: #16213E;
+    --card: #FFFFFF;
+    --card-dark: #0F3460;
+  }
+
+  * {
+    @apply border-border-light dark:border-border-dark;
+  }
+
+  body {
+    @apply bg-surface dark:bg-surface-dark text-text-primary dark:text-white;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-display;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-accent hover:bg-accent-hover text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300 transform hover:scale-105;
+  }
+
+  .btn-secondary {
+    @apply bg-brand hover:bg-brand/90 text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300;
+  }
+
+  .btn-outline {
+    @apply border-2 border-brand text-brand hover:bg-brand hover:text-white font-semibold px-6 py-3 rounded-lg transition-all duration-300;
+  }
+
+  .card {
+    @apply bg-card dark:bg-card-dark rounded-xl shadow-lg p-6 transition-all duration-300;
+  }
+
+  .input {
+    @apply w-full px-4 py-3 border border-border-light dark:border-border-dark rounded-lg focus:outline-none focus:ring-2 focus:ring-accent bg-white dark:bg-card-dark;
+  }
+
+  .badge {
+    @apply inline-flex items-center px-3 py-1 rounded-full text-xs font-semibold;
+  }
+
+  .badge-new {
+    @apply badge bg-gold text-white;
+  }
+
+  .badge-sale {
+    @apply badge bg-accent text-white;
+  }
+
+  .badge-bestseller {
+    @apply badge bg-brand text-white;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
