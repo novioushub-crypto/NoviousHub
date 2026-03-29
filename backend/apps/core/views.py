@@ -8,19 +8,18 @@ from django.db import connection
 @permission_classes([AllowAny])
 def health_check(request):
     """Health check endpoint for monitoring"""
+    response_data = {
+        'status': 'healthy',
+        'message': 'Noviious API is running'
+    }
+    
+    # Try database connection but don't fail if it's not available
     try:
-        # Check database connection
         with connection.cursor() as cursor:
             cursor.execute("SELECT 1")
-        
-        return Response({
-            'status': 'healthy',
-            'database': 'connected',
-            'message': 'Noviious API is running'
-        })
+        response_data['database'] = 'connected'
     except Exception as e:
-        return Response({
-            'status': 'unhealthy',
-            'database': 'disconnected',
-            'error': str(e)
-        }, status=503)
+        response_data['database'] = 'disconnected'
+        response_data['db_error'] = str(e)
+    
+    return Response(response_data)

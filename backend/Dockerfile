@@ -14,16 +14,21 @@ RUN apt-get update && apt-get install -y \
     gcc \
     && rm -rf /var/lib/apt/lists/*
 
+# Copy requirements directory
+COPY requirements/ ./requirements/
+
 # Install Python dependencies
-COPY requirements/production.txt requirements/base.txt ./requirements/
 RUN pip install -r requirements/production.txt
 
 # Copy project
 COPY . .
+
+# Make start script executable
+RUN chmod +x start.sh
 
 # Create staticfiles directory
 RUN mkdir -p /app/staticfiles
 
 EXPOSE 8000
 
-CMD ["gunicorn", "config.wsgi:application", "--bind", "0.0.0.0:8000", "--workers", "4"]
+CMD ["./start.sh"]
