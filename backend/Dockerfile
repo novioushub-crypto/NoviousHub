@@ -21,8 +21,8 @@ RUN pip install -r requirements/production.txt
 # Copy project
 COPY . .
 
-# Collect static files
-RUN python manage.py collectstatic --noinput
+# Create staticfiles directory
+RUN mkdir -p /app/staticfiles
 
 EXPOSE 8000
 
