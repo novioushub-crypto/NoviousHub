@@ -7,6 +7,7 @@ import { ArrowLeft, Upload, Loader2, X } from 'lucide-react'
 import Link from 'next/link'
 import api from '@/lib/api'
 import Image from 'next/image'
+import ProductAIAutofill from '@/components/admin/ProductAIAutofill'
 
 export default function AddProductPage() {
   const router = useRouter()
@@ -44,6 +45,10 @@ export default function AddProductPage() {
   const removeImage = (index: number) => {
     setImages(images.filter((_, i) => i !== index))
     setImagePreviews(imagePreviews.filter((_, i) => i !== index))
+  }
+
+  const handleAIAutofill = (data: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...data }))
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -113,6 +118,9 @@ export default function AddProductPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl">
+          {/* AI Autofill Component */}
+          <ProductAIAutofill onApply={handleAIAutofill} />
+
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-6">
             {/* Basic Info */}
             <div>
