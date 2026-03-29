@@ -17,17 +17,23 @@ ALLOWED_HOSTS = [
     'noviious-backend.fly.dev',
     '.fly.dev',
     '.vercel.app',
+    'www.noviious.com',
+    'noviious.com',
     'localhost',
 ]
 
 # CORS Settings
 CORS_ALLOWED_ORIGINS = [
-    'https://novious-hub.vercel.app',  # Update with your actual Vercel URL
+    'https://www.noviious.com',
+    'https://noviious.com',
+    'https://novious-hub.vercel.app',
     'http://localhost:3000',
 ]
 
 CSRF_TRUSTED_ORIGINS = [
-    'https://novious-hub.vercel.app',  # Update with your actual Vercel URL
+    'https://www.noviious.com',
+    'https://noviious.com',
+    'https://novious-hub.vercel.app',
     'https://noviious-backend.fly.dev',
 ]
 
