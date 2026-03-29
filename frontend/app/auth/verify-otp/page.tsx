@@ -1,13 +1,13 @@
 'use client'
 
-import { useState, useEffect, useRef } from 'react'
+import { useState, useEffect, useRef, Suspense } from 'react'
 import { useRouter, useSearchParams } from 'next/navigation'
 import { motion } from 'framer-motion'
 import { Mail, Loader2, Check, ArrowLeft } from 'lucide-react'
 import api from '@/lib/api'
 import { useAuthStore } from '@/lib/store/authStore'
 
-export default function VerifyOTPPage() {
+function VerifyOTPContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const email = searchParams.get('email')
@@ -278,5 +278,21 @@ export default function VerifyOTPPage() {
         </div>
       </motion.div>
     </div>
+  )
+}
+
+
+export default function VerifyOTPPage() {
+  return (
+    <Suspense fallback={
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center bg-gradient-to-br from-surface via-white to-surface dark:from-surface-dark dark:via-brand dark:to-surface-dark">
+        <div className="flex items-center gap-3">
+          <Loader2 className="w-8 h-8 animate-spin text-accent" />
+          <span className="text-lg">Loading...</span>
+        </div>
+      </div>
+    }>
+      <VerifyOTPContent />
+    </Suspense>
   )
 }
