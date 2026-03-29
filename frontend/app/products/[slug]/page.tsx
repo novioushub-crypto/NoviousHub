@@ -60,13 +60,17 @@ export default function ProductDetailPage() {
         stock: 100,
         price_adjustment: 0,
         final_price: product?.base_price || 0,
+        is_active: true,
+        product: product?.id || 0,
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString(),
       }
 
       if (product) {
         addItem({
           variant_id: tempVariant.id,
           product,
-          variant: tempVariant,
+          variant: tempVariant as any,
           quantity,
         })
         alert('Added to cart!')
