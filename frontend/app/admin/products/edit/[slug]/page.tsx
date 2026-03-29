@@ -8,6 +8,7 @@ import Link from 'next/link'
 import api from '@/lib/api'
 import Image from 'next/image'
 import { useQuery } from '@tanstack/react-query'
+import ProductAIAutofill from '@/components/admin/ProductAIAutofill'
 
 export default function EditProductPage() {
   const router = useRouter()
@@ -81,6 +82,10 @@ export default function EditProductPage() {
     setExistingImages(existingImages.filter((_, i) => i !== index))
   }
 
+  const handleAIAutofill = (data: Partial<typeof formData>) => {
+    setFormData(prev => ({ ...prev, ...data }))
+  }
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setLoading(true)
@@ -147,6 +152,9 @@ export default function EditProductPage() {
         </div>
 
         <form onSubmit={handleSubmit} className="max-w-4xl">
+          {/* AI Autofill Component */}
+          <ProductAIAutofill onApply={handleAIAutofill} />
+
           <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-sm space-y-6">
             {/* Basic Info */}
             <div>
