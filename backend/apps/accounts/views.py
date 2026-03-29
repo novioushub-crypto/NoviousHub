@@ -8,10 +8,11 @@ from django.utils.decorators import method_decorator
 from google.oauth2 import id_token
 from google.auth.transport import requests
 from django.conf import settings
-from .models import CustomUser, Address
+from .models import CustomUser, Address, OTP
 from .serializers import (
     UserSerializer, RegisterSerializer, AddressSerializer, ChangePasswordSerializer
 )
+from apps.core.email_service import EmailService
 
 
 class RegisterView(generics.CreateAPIView):
@@ -21,7 +22,113 @@ class RegisterView(generics.CreateAPIView):
     
     @method_decorator(ratelimit(key='ip', rate='5/h', method='POST'))
     def post(self, request, *args, **kwargs):
-        return super().post(request, *args, **kwargs)
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        user = serializer.save()
+        
+        # Generate and send OTP
+        otp_code = OTP.generate_otp(user.email)
+        EmailService.send_otp_email(
+            email=user.email,
+            otp_code=otp_code,
+            first_name=user.first_name
+        )
+        
+        return Response({
+            'message': 'Registration successful. Please check your email for OTP verification.',
+            'email': user.email,
+            'requires_verification': True
+        }, status=status.HTTP_201_CREATED)
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@ratelimit(key='ip', rate='10/h', method='POST')
+def verify_otp(request):
+    """
+    Verify OTP code sent to user's email
+    Expects: { "email": "user@example.com", "code": "123456" }
+    Returns: { "access": "jwt_token", "refresh": "jwt_token", "user": {...} }
+    """
+    email = request.data.get('email')
+    code = request.data.get('code')
+    
+    if not email or not code:
+        return Response(
+            {'error': 'Email and code are required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    # Verify OTP
+    if OTP.verify_otp(email, code):
+        try:
+            user = CustomUser.objects.get(email=email)
+            user.is_verified = True
+            user.save()
+            
+            # Send welcome email
+            EmailService.send_welcome_email(
+                email=user.email,
+                first_name=user.first_name
+            )
+            
+            # Generate JWT tokens
+            refresh = RefreshToken.for_user(user)
+            user_serializer = UserSerializer(user)
+            
+            return Response({
+                'message': 'Email verified successfully',
+                'access': str(refresh.access_token),
+                'refresh': str(refresh),
+                'user': user_serializer.data
+            }, status=status.HTTP_200_OK)
+        except CustomUser.DoesNotExist:
+            return Response(
+                {'error': 'User not found'},
+                status=status.HTTP_404_NOT_FOUND
+            )
+    else:
+        return Response(
+            {'error': 'Invalid or expired OTP code'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+
+@api_view(['POST'])
+@permission_classes([AllowAny])
+@ratelimit(key='ip', rate='5/h', method='POST')
+def resend_otp(request):
+    """
+    Resend OTP code to user's email
+    Expects: { "email": "user@example.com" }
+    """
+    email = request.data.get('email')
+    
+    if not email:
+        return Response(
+            {'error': 'Email is required'},
+            status=status.HTTP_400_BAD_REQUEST
+        )
+    
+    try:
+        user = CustomUser.objects.get(email=email)
+        
+        # Generate and send new OTP
+        otp_code = OTP.generate_otp(user.email)
+        EmailService.send_otp_email(
+            email=user.email,
+            otp_code=otp_code,
+            first_name=user.first_name
+        )
+        
+        return Response({
+            'message': 'OTP resent successfully. Please check your email.'
+        }, status=status.HTTP_200_OK)
+    except CustomUser.DoesNotExist:
+        return Response(
+            {'error': 'User not found'},
+            status=status.HTTP_404_NOT_FOUND
+        )
 
 
 @api_view(['POST'])
@@ -93,6 +200,13 @@ def google_login(request):
         
         # Serialize user data
         user_serializer = UserSerializer(user)
+        
+        # Send welcome email for first-time login
+        if created:
+            EmailService.send_welcome_email(
+                email=user.email,
+                first_name=user.first_name
+            )
         
         logger.info(f"Login successful for user: {user.email}")
         

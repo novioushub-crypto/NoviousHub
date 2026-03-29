@@ -34,11 +34,12 @@ export default function RegisterPage() {
     }
 
     try {
-      await api.post('/auth/register/', formData)
+      const response = await api.post('/auth/register/', formData)
       setSuccess(true)
+      // Redirect to OTP verification page
       setTimeout(() => {
-        router.push('/auth/login')
-      }, 2000)
+        router.push(`/auth/verify-otp?email=${encodeURIComponent(formData.email)}`)
+      }, 1500)
     } catch (err: any) {
       setError(err.response?.data?.email?.[0] || err.response?.data?.detail || 'Registration failed')
     } finally {
@@ -63,7 +64,7 @@ export default function RegisterPage() {
             <Check className="w-10 h-10 text-white" />
           </motion.div>
           <h2 className="text-2xl font-bold mb-2">Account Created!</h2>
-          <p className="text-text-secondary">Redirecting to login...</p>
+          <p className="text-text-secondary">Redirecting to email verification...</p>
         </motion.div>
       </div>
     )
