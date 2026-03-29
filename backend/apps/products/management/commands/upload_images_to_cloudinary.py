@@ -1,103 +1,107 @@
 import os
-import cloudinary.uploader
 from django.core.management.base import BaseCommand
-from django.conf import settings
 from apps.products.models import Product, ProductImage, Category
+from decimal import Decimal
+import random
 
 
 class Command(BaseCommand):
-    help = 'Upload existing product images to Cloudinary'
+    help = 'Create products with Cloudinary image URLs'
 
     def handle(self, *args, **options):
-        self.stdout.write('Starting image upload to Cloudinary...\n')
-        
-        media_path = settings.BASE_DIR / 'media' / 'products'
-        
-        if not media_path.exists():
-            self.stdout.write(self.style.ERROR('Media folder not found!'))
-            return
+        self.stdout.write('Creating products with Cloudinary images...\n')
         
         # Get categories
         leather_cat = Category.objects.filter(name__icontains='leather').first()
         sportswear_cat = Category.objects.filter(name__icontains='sport').first()
         
-        uploaded_count = 0
+        if not leather_cat or not sportswear_cat:
+            self.stdout.write(self.style.ERROR('Categories not found!'))
+            return
         
-        # Process Leather folder
-        leather_path = media_path / 'Leather'
-        if leather_path.exists() and leather_cat:
-            self.stdout.write(f'\nProcessing Leather images...')
-            uploaded_count += self.process_folder(leather_path, leather_cat, 'Leather')
+        # Cloudinary base URL
+        cloudinary_base = 'https://res.cloudinary.com/dpcrsepms/image/upload'
         
-        # Process Sportswear folder
-        sportswear_path = media_path / 'Sportswear'
-        if sportswear_path.exists() and sportswear_cat:
-            self.stdout.write(f'\nProcessing Sportswear images...')
-            uploaded_count += self.process_folder(sportswear_path, sportswear_cat, 'Sportswear')
+        # Leather products (assuming you have images leather_1 to leather_10)
+        leather_products = [
+            ('Classic Leather Jacket', 'Premium black leather jacket with modern design'),
+            ('Vintage Leather Bomber', 'Retro style bomber jacket in genuine leather'),
+            ('Leather Biker Jacket', 'Edgy biker style with metal details'),
+            ('Brown Leather Coat', 'Elegant long leather coat for formal occasions'),
+            ('Leather Racing Jacket', 'Sporty racing style leather jacket'),
+        ]
         
-        self.stdout.write(self.style.SUCCESS(f'\n✓ Successfully uploaded {uploaded_count} images to Cloudinary!'))
-        self.stdout.write(self.style.SUCCESS(f'✓ Total products: {Product.objects.count()}'))
-        self.stdout.write(self.style.SUCCESS(f'✓ Total product images: {ProductImage.objects.count()}'))
-
-    def process_folder(self, folder_path, category, category_name):
-        from decimal import Decimal
-        import random
+        # Sportswear products
+        sportswear_products = [
+            ('Athletic Track Suit', 'Complete track suit for training'),
+            ('Running Shorts Pro', 'Lightweight running shorts'),
+            ('Sports Compression Shirt', 'High-performance compression wear'),
+            ('Training Joggers', 'Comfortable joggers for workouts'),
+            ('Athletic Hoodie', 'Warm hoodie for outdoor training'),
+        ]
         
-        uploaded = 0
-        image_files = [f for f in os.listdir(folder_path) if f.lower().endswith(('.jpg', '.jpeg', '.png', '.webp'))]
+        created_count = 0
         
-        for idx, image_file in enumerate(image_files, 1):
-            image_path = folder_path / image_file
+        # Create Leather products
+        for idx, (name, desc) in enumerate(leather_products, 1):
+            product, created = Product.objects.get_or_create(
+                name=name,
+                defaults={
+                    'description': desc,
+                    'short_description': desc[:50],
+                    'base_price': Decimal(str(random.randint(150, 350))) + Decimal('0.99'),
+                    'compare_at_price': Decimal(str(random.randint(400, 500))) + Decimal('0.99'),
+                    'category': leather_cat,
+                    'sku': f'LEA-{idx:04d}',
+                    'is_active': True,
+                    'is_featured': idx <= 2,
+                    'is_bestseller': idx == 1,
+                }
+            )
             
-            try:
-                # Create product
-                product_name = f"{category_name} Product {idx}"
-                base_price = Decimal(str(random.randint(50, 300))) + Decimal('0.99')
-                
-                product, created = Product.objects.get_or_create(
-                    name=product_name,
-                    defaults={
-                        'description': f'Premium quality {category_name.lower()} product with excellent craftsmanship',
-                        'short_description': f'Quality {category_name.lower()} item',
-                        'base_price': base_price,
-                        'compare_at_price': base_price + Decimal('50.00'),
-                        'category': category,
-                        'sku': f'{category_name[:3].upper()}-{idx:04d}',
-                        'is_active': True,
-                        'is_featured': idx <= 3,
-                    }
-                )
-                
-                if created:
-                    self.stdout.write(f'  Created product: {product_name}')
-                
-                # Upload image to Cloudinary
-                self.stdout.write(f'  Uploading: {image_file}...')
-                result = cloudinary.uploader.upload(
-                    str(image_path),
-                    folder=f"products/{category_name}",
-                    public_id=f"{category_name.lower()}_{idx}",
-                    overwrite=True
-                )
-                
-                # Create ProductImage with Cloudinary URL
-                product_image, img_created = ProductImage.objects.get_or_create(
+            if created:
+                # Add Cloudinary image
+                image_url = f'{cloudinary_base}/v1/products/Leather/leather_{idx}'
+                ProductImage.objects.create(
                     product=product,
-                    defaults={
-                        'image': result['secure_url'],
-                        'image_url': result['secure_url'],
-                        'is_primary': True,
-                        'alt_text': f'{product_name} image'
-                    }
+                    image=image_url,
+                    image_url=image_url,
+                    is_primary=True,
+                    alt_text=f'{name} image'
                 )
-                
-                if img_created:
-                    self.stdout.write(self.style.SUCCESS(f'  ✓ Uploaded: {image_file} → {result["secure_url"]}'))
-                    uploaded += 1
-                else:
-                    self.stdout.write(self.style.WARNING(f'  - Image already exists for {product_name}'))
-                
-            except Exception as e:
-                self.stdout.write(self.style.ERROR(f'  ✗ Error with {image_file}: {str(e)}'))
+                self.stdout.write(self.style.SUCCESS(f'✓ Created: {name}'))
+                created_count += 1
         
-        return uploaded
+        # Create Sportswear products
+        for idx, (name, desc) in enumerate(sportswear_products, 1):
+            product, created = Product.objects.get_or_create(
+                name=name,
+                defaults={
+                    'description': desc,
+                    'short_description': desc[:50],
+                    'base_price': Decimal(str(random.randint(50, 150))) + Decimal('0.99'),
+                    'compare_at_price': Decimal(str(random.randint(180, 250))) + Decimal('0.99'),
+                    'category': sportswear_cat,
+                    'sku': f'SPO-{idx:04d}',
+                    'is_active': True,
+                    'is_featured': idx <= 2,
+                    'is_new': idx <= 3,
+                }
+            )
+            
+            if created:
+                # Add Cloudinary image
+                image_url = f'{cloudinary_base}/v1/products/Sportswear/sportswear_{idx}'
+                ProductImage.objects.create(
+                    product=product,
+                    image=image_url,
+                    image_url=image_url,
+                    is_primary=True,
+                    alt_text=f'{name} image'
+                )
+                self.stdout.write(self.style.SUCCESS(f'✓ Created: {name}'))
+                created_count += 1
+        
+        self.stdout.write(self.style.SUCCESS(f'\n✓ Created {created_count} new products'))
+        self.stdout.write(self.style.SUCCESS(f'✓ Total products: {Product.objects.count()}'))
+        self.stdout.write(self.style.SUCCESS(f'✓ Total images: {ProductImage.objects.count()}'))
