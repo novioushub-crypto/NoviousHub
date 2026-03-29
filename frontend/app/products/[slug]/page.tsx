@@ -34,18 +34,43 @@ export default function ProductDetailPage() {
       return
     }
 
-    const variant = product?.variants.find(
-      (v) => v.size === selectedSize && v.color === selectedColor
-    )
+    // If product has variants, find the matching variant
+    if (product?.variants && product.variants.length > 0) {
+      const variant = product.variants.find(
+        (v) => v.size === selectedSize && v.color === selectedColor
+      )
 
-    if (variant && product) {
-      addItem({
-        variant_id: variant.id,
-        product,
-        variant,
-        quantity,
-      })
-      alert('Added to cart!')
+      if (variant && product) {
+        addItem({
+          variant_id: variant.id,
+          product,
+          variant,
+          quantity,
+        })
+        alert('Added to cart!')
+      }
+    } else {
+      // If no variants exist, create a temporary variant for cart
+      const tempVariant = {
+        id: product?.id || 0,
+        size: selectedSize,
+        color: selectedColor,
+        color_hex: '#000000',
+        sku: product?.sku || '',
+        stock: 100,
+        price_adjustment: 0,
+        final_price: product?.base_price || 0,
+      }
+
+      if (product) {
+        addItem({
+          variant_id: tempVariant.id,
+          product,
+          variant: tempVariant,
+          quantity,
+        })
+        alert('Added to cart!')
+      }
     }
   }
 
@@ -137,42 +162,98 @@ export default function ProductDetailPage() {
             {/* Size Selection */}
             <div className="mb-6">
               <label className="block font-semibold mb-3">Size</label>
-              <div className="flex gap-2">
-                {[...new Set(product.variants.map((v) => v.size))].map((size) => (
-                  <button
-                    key={size}
-                    onClick={() => setSelectedSize(size)}
-                    className={`px-4 py-2 border-2 rounded-lg font-semibold transition-all ${
-                      selectedSize === size
-                        ? 'border-accent bg-accent text-white'
-                        : 'border-border-light hover:border-accent'
-                    }`}
-                  >
-                    {size}
-                  </button>
-                ))}
-              </div>
+              {product.variants && product.variants.length > 0 ? (
+                <div className="flex flex-wrap gap-2">
+                  {[...new Set(product.variants.map((v) => v.size))].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-2 border-2 rounded-lg font-semibold transition-all ${
+                        selectedSize === size
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-accent'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-2">
+                  {['S', 'M', 'L', 'XL', '2XL'].map((size) => (
+                    <button
+                      key={size}
+                      onClick={() => setSelectedSize(size)}
+                      className={`px-4 py-2 border-2 rounded-lg font-semibold transition-all ${
+                        selectedSize === size
+                          ? 'border-accent bg-accent text-white'
+                          : 'border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 hover:border-accent'
+                      }`}
+                    >
+                      {size}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Color Selection */}
             <div className="mb-6">
               <label className="block font-semibold mb-3">Color</label>
-              <div className="flex gap-2">
-                {[...new Set(product.variants.map((v) => v.color))].map((color) => {
-                  const variant = product.variants.find((v) => v.color === color)
-                  return (
+              {product.variants && product.variants.length > 0 ? (
+                <div className="flex flex-wrap gap-3">
+                  {[...new Set(product.variants.map((v) => v.color))].map((color) => {
+                    const variant = product.variants.find((v) => v.color === color)
+                    return (
+                      <button
+                        key={color}
+                        onClick={() => setSelectedColor(color)}
+                        className={`relative w-12 h-12 rounded-full border-4 transition-all ${
+                          selectedColor === color 
+                            ? 'border-accent scale-110 shadow-lg' 
+                            : 'border-gray-300 dark:border-gray-600 hover:border-accent'
+                        }`}
+                        style={{ backgroundColor: variant?.color_hex || '#ccc' }}
+                        title={color}
+                      >
+                        {selectedColor === color && (
+                          <span className="absolute inset-0 flex items-center justify-center">
+                            <span className="w-3 h-3 bg-white rounded-full shadow-md" />
+                          </span>
+                        )}
+                      </button>
+                    )
+                  })}
+                </div>
+              ) : (
+                <div className="flex flex-wrap gap-3">
+                  {[
+                    { name: 'Black', hex: '#000000' },
+                    { name: 'White', hex: '#FFFFFF' },
+                    { name: 'Red', hex: '#EF4444' },
+                    { name: 'Blue', hex: '#3B82F6' },
+                    { name: 'Green', hex: '#10B981' }
+                  ].map((color) => (
                     <button
-                      key={color}
-                      onClick={() => setSelectedColor(color)}
-                      className={`w-12 h-12 rounded-full border-2 transition-all ${
-                        selectedColor === color ? 'border-accent scale-110' : 'border-border-light'
+                      key={color.name}
+                      onClick={() => setSelectedColor(color.name)}
+                      className={`relative w-12 h-12 rounded-full border-4 transition-all ${
+                        selectedColor === color.name 
+                          ? 'border-accent scale-110 shadow-lg' 
+                          : 'border-gray-300 dark:border-gray-600 hover:border-accent'
                       }`}
-                      style={{ backgroundColor: variant?.color_hex || '#ccc' }}
-                      title={color}
-                    />
-                  )
-                })}
-              </div>
+                      style={{ backgroundColor: color.hex }}
+                      title={color.name}
+                    >
+                      {selectedColor === color.name && (
+                        <span className="absolute inset-0 flex items-center justify-center">
+                          <span className={`w-3 h-3 rounded-full shadow-md ${color.name === 'White' ? 'bg-black' : 'bg-white'}`} />
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              )}
             </div>
 
             {/* Quantity */}
@@ -181,14 +262,14 @@ export default function ProductDetailPage() {
               <div className="flex items-center gap-4">
                 <button
                   onClick={() => setQuantity(Math.max(1, quantity - 1))}
-                  className="w-10 h-10 border-2 rounded-lg hover:border-accent"
+                  className="w-10 h-10 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg hover:border-accent transition-colors"
                 >
                   -
                 </button>
                 <span className="text-xl font-semibold w-12 text-center">{quantity}</span>
                 <button
                   onClick={() => setQuantity(quantity + 1)}
-                  className="w-10 h-10 border-2 rounded-lg hover:border-accent"
+                  className="w-10 h-10 border-2 border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-800 rounded-lg hover:border-accent transition-colors"
                 >
                   +
                 </button>
