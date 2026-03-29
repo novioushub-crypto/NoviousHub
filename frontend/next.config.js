@@ -5,6 +5,12 @@ const nextConfig = {
       {
         protocol: 'https',
         hostname: 'res.cloudinary.com',
+        pathname: '/dpcrsepms/**',
+      },
+      {
+        protocol: 'https',
+        hostname: 'noviious-backend.fly.dev',
+        pathname: '/media/**',
       },
       {
         protocol: 'https',

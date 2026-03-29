@@ -4,6 +4,7 @@ Complete guide for deploying Noviious to production:
 - Frontend: Vercel
 - Backend: Fly.io
 - Database: Supabase (PostgreSQL)
+- Media Storage: Cloudinary
 
 ---
 
@@ -14,6 +15,7 @@ Before starting, ensure you have:
 - [ ] Vercel account (https://vercel.com)
 - [ ] Fly.io account (https://fly.io)
 - [ ] Supabase account (https://supabase.com)
+- [ ] Cloudinary account (https://cloudinary.com)
 - [ ] Domain name (optional, but recommended)
 
 ---
@@ -26,37 +28,57 @@ Before starting, ensure you have:
 2. Click "New Project"
 3. Fill in details:
    - **Name**: `noviious-production`
-   - **Database Password**: Generate a strong password (save it!)
+   - **Database Password**: Use the password you have: `SzMz4vD24Vdje6iR`
    - **Region**: Choose closest to your users
    - **Pricing Plan**: Free tier is fine to start
 4. Click "Create new project" (takes ~2 minutes)
 
-### 1.2 Get Database Credentials
+### 1.2 Your Database Credentials
 
-1. In your Supabase project, go to **Settings** → **Database**
-2. Scroll to **Connection string** section
-3. Copy the **URI** (it looks like):
-   ```
-   postgresql://postgres:[YOUR-PASSWORD]@db.xxxxx.supabase.co:5432/postgres
-   ```
-4. Replace `[YOUR-PASSWORD]` with your actual database password
+Based on your information:
+```
+Project ID: alhhmgbylcfggrgolcdv
+Database Password: SzMz4vD24Vdje6iR
+Connection String: postgresql://postgres:SzMz4vD24Vdje6iR@db.alhhmgbylcfggrgolcdv.supabase.co:5432/postgres
+```
 
-### 1.3 Save These Values (You'll need them later):
+Save this for later use!
+
+---
+
+## ☁️ STEP 2: Setup Cloudinary
+
+### 2.1 Your Cloudinary Credentials
+
+Based on your information:
+```
+Cloud Name: dpcrsepms
+API Key: 639394495474588
+API Secret: [Your secret key]
+Cloudinary URL: cloudinary://639394495474588:YOUR_SECRET@dpcrsepms
+```
+
+### 2.2 How Image Upload Works
 
 ```
-DATABASE_URL=postgresql://postgres:[PASSWORD]@db.xxxxx.supabase.co:5432/postgres
-DB_HOST=db.xxxxx.supabase.co
-DB_NAME=postgres
-DB_USER=postgres
-DB_PASSWORD=[YOUR-PASSWORD]
-DB_PORT=5432
+React (Frontend) → Sends image file
+    ↓
+Django API (Backend) → Receives file
+    ↓
+Cloudinary → Stores image, returns URL
+    ↓
+Django → Saves URL to database
+    ↓
+React → Displays image from Cloudinary URL ✅
 ```
 
 ---
 
-## 🚀 STEP 2: Deploy Backend to Fly.io
+## 🚀 STEP 3: Deploy Backend to Fly.io
 
-### 2.1 Install Fly CLI
+## 🚀 STEP 3: Deploy Backend to Fly.io
+
+### 3.1 Install Fly CLI
 
 **Windows (PowerShell):**
 ```powershell
@@ -68,94 +90,13 @@ iwr https://fly.io/install.ps1 -useb | iex
 curl -L https://fly.io/install.sh | sh
 ```
 
-### 2.2 Login to Fly.io
+### 3.2 Login to Fly.io
 
 ```bash
 fly auth login
 ```
 
-### 2.3 Update Backend Configuration
-
-First, update `backend/config/settings/production.py`:
-
-```python
-# Add at the top
-import dj_database_url
-
-# Update DATABASES
-DATABASES = {
-    'default': dj_database_url.config(
-        default=os.environ.get('DATABASE_URL'),
-        conn_max_age=600,
-        conn_health_checks=True,
-    )
-}
-
-# Update ALLOWED_HOSTS
-ALLOWED_HOSTS = [
-    'noviious-backend.fly.dev',  # Your fly.io domain
-    '.vercel.app',  # Your Vercel domain
-    'yourdomain.com',  # Your custom domain (if any)
-]
-
-# Update CORS_ALLOWED_ORIGINS
-CORS_ALLOWED_ORIGINS = [
-    'https://noviious.vercel.app',  # Your Vercel domain
-    'https://yourdomain.com',  # Your custom domain (if any)
-]
-
-# Update CSRF_TRUSTED_ORIGINS
-CSRF_TRUSTED_ORIGINS = [
-    'https://noviious.vercel.app',
-    'https://yourdomain.com',
-]
-```
-
-### 2.4 Update requirements/production.txt
-
-Add these packages:
-```txt
-dj-database-url==2.1.0
-psycopg2-binary==2.9.9
-gunicorn==21.2.0
-whitenoise==6.6.0
-```
-
-### 2.5 Create/Update fly.toml
-
-The file already exists, but verify it has:
-
-```toml
-app = "noviious-backend"
-primary_region = "iad"
-
-[build]
-  [build.args]
-    PYTHON_VERSION = "3.11"
-
-[env]
-  PORT = "8000"
-  DJANGO_SETTINGS_MODULE = "config.settings.production"
-
-[http_service]
-  internal_port = 8000
-  force_https = true
-  auto_stop_machines = true
-  auto_start_machines = true
-  min_machines_running = 0
-  processes = ["app"]
-
-[[vm]]
-  cpu_kind = "shared"
-  cpus = 1
-  memory_mb = 256
-
-[mounts]
-  source = "noviious_media"
-  destination = "/app/media"
-```
-
-### 2.6 Launch Fly.io App
+### 3.3 Launch Fly.io App
 
 ```bash
 cd backend
@@ -164,47 +105,55 @@ fly launch --no-deploy
 
 Answer the prompts:
 - **App name**: `noviious-backend` (or your preferred name)
-- **Region**: Choose closest to your users
+- **Region**: Choose closest to your users (e.g., `iad` for US East)
 - **PostgreSQL**: No (we're using Supabase)
 - **Redis**: No (not needed yet)
 
-### 2.7 Set Environment Variables
+### 3.4 Set Environment Variables on Fly.io
+
+Run these commands one by one:
 
 ```bash
-# Database
-fly secrets set DATABASE_URL="postgresql://postgres:[PASSWORD]@db.xxxxx.supabase.co:5432/postgres"
+# Database (Supabase)
+fly secrets set DATABASE_URL="postgresql://postgres:SzMz4vD24Vdje6iR@db.alhhmgbylcfggrgolcdv.supabase.co:5432/postgres"
 
-# Django
-fly secrets set SECRET_KEY="your-super-secret-key-here-generate-a-new-one"
+# Django Secret Key (generate a new one)
+fly secrets set SECRET_KEY="your-super-secret-key-generate-new-one"
+
+# Django Settings
 fly secrets set DEBUG="False"
 fly secrets set DJANGO_SETTINGS_MODULE="config.settings.production"
 
-# Google OAuth
-fly secrets set GOOGLE_OAUTH2_CLIENT_ID="YOUR-GOOGLE-CLIENT-ID"
-fly secrets set GOOGLE_OAUTH2_CLIENT_SECRET="YOUR-GOOGLE-CLIENT-SECRET"
+# Cloudinary
+fly secrets set CLOUDINARY_CLOUD_NAME="dpcrsepms"
+fly secrets set CLOUDINARY_API_KEY="639394495474588"
+fly secrets set CLOUDINARY_API_SECRET="your-cloudinary-secret"
+fly secrets set CLOUDINARY_URL="cloudinary://639394495474588:YOUR_SECRET@dpcrsepms"
 
 # Frontend URL (update after deploying to Vercel)
-fly secrets set FRONTEND_URL="https://noviious.vercel.app"
+fly secrets set FRONTEND_URL="https://www.noviious.com"
+fly secrets set CORS_ALLOWED_ORIGINS="https://www.noviious.com,https://noviious.com"
+fly secrets set ALLOWED_HOSTS="noviious-backend.fly.dev,.fly.dev,.vercel.app,www.noviious.com,noviious.com"
 ```
 
-**Generate a new SECRET_KEY:**
+**To generate a new SECRET_KEY:**
 ```bash
 python -c "from django.core.management.utils import get_random_secret_key; print(get_random_secret_key())"
 ```
 
-### 2.8 Create Volume for Media Files
-
-```bash
-fly volumes create noviious_media --size 1
-```
-
-### 2.9 Deploy to Fly.io
+### 3.5 Deploy to Fly.io
 
 ```bash
 fly deploy
 ```
 
-### 2.10 Run Database Migrations
+This will:
+- Build the Docker image
+- Install all dependencies
+- Deploy to Fly.io
+- Start the application
+
+### 3.6 Run Database Migrations
 
 ```bash
 fly ssh console
@@ -215,34 +164,46 @@ python manage.py seed_db
 exit
 ```
 
-### 2.11 Test Backend
+### 3.7 Test Backend
 
 ```bash
 fly open
 ```
 
-Visit: `https://noviious-backend.fly.dev/api/v1/products/`
+Visit these URLs to test:
+- Health check: `https://noviious-backend.fly.dev/api/v1/health/`
+- Products: `https://noviious-backend.fly.dev/api/v1/products/`
+- Admin: `https://noviious-backend.fly.dev/admin/`
 
 ---
 
-## 🌐 STEP 3: Deploy Frontend to Vercel
+## 🌐 STEP 4: Deploy Frontend to Vercel
 
-### 3.1 Update Frontend Environment Variables
+## 🌐 STEP 4: Deploy Frontend to Vercel
 
-Create `frontend/.env.production`:
+### 4.1 Update Frontend Environment Variables
+
+The frontend needs to know where the backend API is. Create/update `frontend/.env.production`:
 
 ```env
 NEXT_PUBLIC_API_URL=https://noviious-backend.fly.dev
 NEXT_PUBLIC_GOOGLE_CLIENT_ID=YOUR-GOOGLE-CLIENT-ID
 ```
 
-### 3.2 Update next.config.js
+### 4.2 Update next.config.js for Cloudinary Images
+
+Update `frontend/next.config.js` to allow images from Cloudinary:
 
 ```javascript
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
     remotePatterns: [
+      {
+        protocol: 'https',
+        hostname: 'res.cloudinary.com',
+        pathname: '/dpcrsepms/**',
+      },
       {
         protocol: 'https',
         hostname: 'noviious-backend.fly.dev',
@@ -259,23 +220,7 @@ const nextConfig = {
 module.exports = nextConfig
 ```
 
-### 3.3 Deploy to Vercel
-
-**Option A: Using Vercel CLI**
-
-```bash
-# Install Vercel CLI
-npm i -g vercel
-
-# Login
-vercel login
-
-# Deploy
-cd frontend
-vercel --prod
-```
-
-**Option B: Using Vercel Dashboard (Recommended)**
+### 4.3 Deploy to Vercel (Recommended Method)
 
 1. Go to https://vercel.com/dashboard
 2. Click "Add New" → "Project"
@@ -292,34 +237,36 @@ vercel --prod
    ```
 6. Click "Deploy"
 
-### 3.4 Get Your Vercel URL
+### 4.4 Alternative: Using Vercel CLI
 
-After deployment, you'll get a URL like:
+```bash
+# Install Vercel CLI
+npm i -g vercel
+
+# Login
+vercel login
+
+# Deploy
+cd frontend
+vercel --prod
 ```
-https://novious-hub.vercel.app
-```
+
+### 4.5 Get Your Vercel URL
+
+After deployment, you'll get URLs like:
+- Production: `https://www.noviious.com` (if custom domain configured)
+- Preview: `https://novious-hub.vercel.app`
 
 ---
 
-## 🔄 STEP 4: Update Backend with Frontend URL
+## 🔄 STEP 5: Update Backend with Frontend URL
 
-Now that you have your Vercel URL, update the backend:
+Now that you have your Vercel URL, update the backend CORS settings:
 
 ```bash
 cd backend
-fly secrets set FRONTEND_URL="https://novious-hub.vercel.app"
-```
-
-Update `backend/config/settings/production.py`:
-
-```python
-CORS_ALLOWED_ORIGINS = [
-    'https://novious-hub.vercel.app',  # Your actual Vercel URL
-]
-
-CSRF_TRUSTED_ORIGINS = [
-    'https://novious-hub.vercel.app',
-]
+fly secrets set FRONTEND_URL="https://www.noviious.com"
+fly secrets set CORS_ALLOWED_ORIGINS="https://www.noviious.com,https://noviious.com"
 ```
 
 Redeploy backend:
@@ -329,7 +276,7 @@ fly deploy
 
 ---
 
-## 🔐 STEP 5: Update Google OAuth Settings
+## 🔐 STEP 6: Configure Google OAuth
 
 1. Go to https://console.cloud.google.com
 2. Select your project
@@ -337,58 +284,63 @@ fly deploy
 4. Click on your OAuth 2.0 Client ID
 5. Update **Authorized JavaScript origins**:
    ```
-   https://novious-hub.vercel.app
+   https://www.noviious.com
+   https://noviious.com
    https://noviious-backend.fly.dev
    ```
-6. Update **Authorized redirect URIs** (if needed):
+6. Update **Authorized redirect URIs**:
    ```
-   https://novious-hub.vercel.app/auth/google/callback
+   https://www.noviious.com/auth/google/callback
+   https://noviious-backend.fly.dev/auth/google/callback
    ```
 7. Click "Save"
 
 ---
 
-## 📦 STEP 6: Upload Media Files
+## � STEP 7: Upload Existing Product Images to Cloudinary
 
-Your product images need to be uploaded to the production server.
+You have two options to migrate your existing product images:
 
-### Option A: Using Fly.io SSH
+### Option A: Manual Upload via Cloudinary Dashboard
+
+1. Go to https://cloudinary.com/console
+2. Click "Media Library"
+3. Create a folder called "products"
+4. Upload your images from `backend/media/products/`
+5. Note the URLs for each image
+
+### Option B: Programmatic Upload (Recommended)
+
+Create a management command to upload all existing images:
 
 ```bash
 fly ssh console
-cd /app/media
-# Upload your images here
+cd /app
+python manage.py shell
 ```
 
-### Option B: Use Cloud Storage (Recommended for Production)
-
-Consider using AWS S3, Cloudinary, or similar for media files.
-
-**Install django-storages and boto3:**
-
-```bash
-pip install django-storages boto3
-```
-
-Update `backend/config/settings/production.py`:
-
+Then run:
 ```python
-# AWS S3 Configuration
-AWS_ACCESS_KEY_ID = os.environ.get('AWS_ACCESS_KEY_ID')
-AWS_SECRET_ACCESS_KEY = os.environ.get('AWS_SECRET_ACCESS_KEY')
-AWS_STORAGE_BUCKET_NAME = os.environ.get('AWS_STORAGE_BUCKET_NAME')
-AWS_S3_REGION_NAME = os.environ.get('AWS_S3_REGION_NAME', 'us-east-1')
-AWS_S3_CUSTOM_DOMAIN = f'{AWS_STORAGE_BUCKET_NAME}.s3.amazonaws.com'
-AWS_S3_OBJECT_PARAMETERS = {'CacheControl': 'max-age=86400'}
+import cloudinary.uploader
+from apps.products.models import ProductImage
 
-# Media files
-DEFAULT_FILE_STORAGE = 'storages.backends.s3boto3.S3Boto3Storage'
-MEDIA_URL = f'https://{AWS_S3_CUSTOM_DOMAIN}/media/'
+for img in ProductImage.objects.all():
+    if img.image:
+        # Upload to Cloudinary
+        result = cloudinary.uploader.upload(
+            img.image.path,
+            folder="products",
+            public_id=f"product_{img.product.id}_{img.id}"
+        )
+        # Update the image URL
+        img.image_url = result['secure_url']
+        img.save()
+        print(f"Uploaded: {img.product.name} - {result['secure_url']}")
 ```
 
 ---
 
-## ✅ STEP 7: Final Checks
+## ✅ STEP 8: Final Testing Checklist
 
 ### 7.1 Test All Features
 
