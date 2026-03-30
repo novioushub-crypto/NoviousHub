@@ -6,7 +6,7 @@ interface SEOProps {
   keywords?: string[]
   image?: string
   url?: string
-  type?: 'website' | 'article' | 'product'
+  type?: 'website' | 'article'
   publishedTime?: string
   modifiedTime?: string
   author?: string
@@ -67,8 +67,8 @@ export function generateSEO({
     },
   }
 
-  // Add product-specific metadata
-  if (type === 'product' && price) {
+  // Add product-specific metadata using other field
+  if (price) {
     metadata.other = {
       'product:price:amount': price,
       'product:price:currency': currency,
