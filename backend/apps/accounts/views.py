@@ -235,6 +235,7 @@ class UserViewSet(viewsets.ModelViewSet):
     queryset = CustomUser.objects.all()
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
+    ordering = ['-date_joined']  # Required for CursorPagination
     
     def get_queryset(self):
         # Admin can see all users, regular users can only see themselves
