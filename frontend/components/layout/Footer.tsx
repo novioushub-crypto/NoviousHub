@@ -34,6 +34,8 @@ export default function Footer() {
               <li><Link href="/about" className="text-surface hover:text-gold transition-colors">About Us</Link></li>
               <li><Link href="/contact" className="text-surface hover:text-gold transition-colors">Contact</Link></li>
               <li><Link href="/faq" className="text-surface hover:text-gold transition-colors">FAQ</Link></li>
+              <li><Link href="/privacy" className="text-surface hover:text-gold transition-colors">Privacy Policy</Link></li>
+              <li><Link href="/terms" className="text-surface hover:text-gold transition-colors">Terms of Service</Link></li>
             </ul>
           </div>
 
