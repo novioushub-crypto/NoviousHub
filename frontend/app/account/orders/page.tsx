@@ -155,7 +155,7 @@ export default function MyOrdersPage() {
                   </div>
 
                   {/* Track Order Button */}
-                  {(order.status === 'shipped' || order.status === 'processing') && (
+                  {(order.status === 'shipped' || order.status === 'processing' || order.status === 'pending') && (
                     <div className="pt-4 border-t border-gray-200 dark:border-gray-700 mt-4">
                       <Link
                         href={`/account/orders/${order.order_number}/track`}

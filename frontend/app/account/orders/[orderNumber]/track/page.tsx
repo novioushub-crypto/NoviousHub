@@ -150,10 +150,22 @@ export default function TrackOrderPage() {
                 <MapPin className="w-6 h-6 text-accent" />
                 Delivery Location
               </h2>
-              <OrderMap
-                destination={order.shipping_address}
-                status={order.status}
-              />
+              {order.shipping_address ? (
+                <OrderMap
+                  destination={order.shipping_address}
+                  status={order.status}
+                />
+              ) : (
+                <div className="w-full h-96 rounded-lg bg-gray-100 dark:bg-gray-800 flex items-center justify-center border border-gray-200 dark:border-gray-700">
+                  <div className="text-center p-6">
+                    <MapPin className="w-12 h-12 mx-auto mb-3 text-gray-400" />
+                    <p className="text-lg font-semibold mb-2">No Shipping Address</p>
+                    <p className="text-sm text-text-secondary">
+                      Shipping address will be available once the order is processed.
+                    </p>
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Shipping Details */}

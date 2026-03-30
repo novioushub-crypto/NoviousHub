@@ -75,6 +75,14 @@ export default function Navbar() {
             >
               Sportswear
             </Link>
+            {isAuthenticated && (
+              <Link
+                href="/account/orders"
+                className={`font-semibold transition-colors ${textColor} hover:text-accent`}
+              >
+                Track Orders
+              </Link>
+            )}
           </div>
 
           {/* Icons */}
@@ -160,6 +168,15 @@ export default function Navbar() {
               >
                 Sportswear
               </Link>
+              {isAuthenticated && (
+                <Link 
+                  href="/account/orders" 
+                  className="text-brand dark:text-white font-semibold"
+                  onClick={() => setIsMobileMenuOpen(false)}
+                >
+                  Track Orders
+                </Link>
+              )}
               
               {/* Theme Toggle - Mobile (Switch) */}
               {mounted && (
