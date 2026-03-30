@@ -7,6 +7,8 @@ import WelcomeModal from '@/components/modals/WelcomeModal'
 import GoogleAnalytics from '@/components/analytics/GoogleAnalytics'
 import StructuredData from '@/components/seo/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
+import { Analytics } from '@vercel/analytics/react'
+import { SpeedInsights } from '@vercel/speed-insights/next'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -114,6 +116,8 @@ export default function RootLayout({
             {children}
           </ConditionalLayout>
         </Providers>
+        <Analytics />
+        <SpeedInsights />
       </body>
     </html>
   )
