@@ -8,13 +8,15 @@ import {
   Search, Filter, Eye, Download, 
   Package, Clock, CheckCircle, XCircle, Loader2, Edit2, Save, X 
 } from 'lucide-react'
-import Link from 'next/link'
+import OrderDetailsModal from '@/components/admin/OrderDetailsModal'
 
 export default function AdminOrdersPage() {
   const [searchQuery, setSearchQuery] = useState('')
   const [statusFilter, setStatusFilter] = useState('')
   const [editingOrder, setEditingOrder] = useState<string | null>(null)
   const [newStatus, setNewStatus] = useState('')
+  const [selectedOrder, setSelectedOrder] = useState<any>(null)
+  const [isModalOpen, setIsModalOpen] = useState(false)
   const queryClient = useQueryClient()
 
   const { data, isLoading, refetch } = useQuery({
@@ -60,6 +62,11 @@ export default function AdminOrdersPage() {
 
   const handleStatusUpdate = (orderId: string, status: string) => {
     updateStatusMutation.mutate({ orderId, status })
+  }
+
+  const handleViewOrder = (order: any) => {
+    setSelectedOrder(order)
+    setIsModalOpen(true)
   }
 
   if (isLoading) {
@@ -265,12 +272,13 @@ export default function AdminOrdersPage() {
                       </td>
                       <td className="px-6 py-4">
                         <div className="flex items-center justify-end gap-2">
-                          <Link
-                            href={`/account/orders/${order.order_number}`}
+                          <button
+                            onClick={() => handleViewOrder(order)}
                             className="p-2 hover:bg-gray-100 dark:hover:bg-gray-600 rounded-lg transition-colors"
+                            title="View Details"
                           >
                             <Eye className="w-4 h-4" />
-                          </Link>
+                          </button>
                         </div>
                       </td>
                     </motion.tr>
@@ -281,6 +289,16 @@ export default function AdminOrdersPage() {
           </div>
         </div>
       </motion.div>
+
+      {/* Order Details Modal */}
+      <OrderDetailsModal
+        order={selectedOrder}
+        isOpen={isModalOpen}
+        onClose={() => {
+          setIsModalOpen(false)
+          setSelectedOrder(null)
+        }}
+      />
     </div>
   )
 }

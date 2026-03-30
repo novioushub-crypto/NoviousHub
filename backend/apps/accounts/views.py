@@ -236,6 +236,21 @@ class UserViewSet(viewsets.ModelViewSet):
     serializer_class = UserSerializer
     permission_classes = [IsAuthenticated]
     
+    def get_queryset(self):
+        # Admin can see all users, regular users can only see themselves
+        if self.request.user.is_staff:
+            return CustomUser.objects.all().order_by('-date_joined')
+        return CustomUser.objects.filter(id=self.request.user.id)
+    
+    def list(self, request, *args, **kwargs):
+        # Only allow admins to list all users
+        if not request.user.is_staff:
+            return Response(
+                {'error': 'You do not have permission to view all users'},
+                status=status.HTTP_403_FORBIDDEN
+            )
+        return super().list(request, *args, **kwargs)
+    
     @action(detail=False, methods=['get'])
     def me(self, request):
         serializer = self.get_serializer(request.user)
