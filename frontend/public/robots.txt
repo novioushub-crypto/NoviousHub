@@ -6,3 +6,4 @@ User-agent: *
 Allow: /
 
 Sitemap: https://noviious.com/sitemap.xml
+
