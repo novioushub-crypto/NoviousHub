@@ -145,8 +145,8 @@ export default function AdminProductsPage() {
               className="px-4 py-2 bg-gray-50 dark:bg-gray-700 border border-gray-200 dark:border-gray-600 rounded-lg outline-none focus:ring-2 focus:ring-accent"
             >
               <option value="">All Categories</option>
-              <option value="1">Leather Jackets</option>
-              <option value="2">Sportswear</option>
+              <option value="leather-jackets">Leather Jackets</option>
+              <option value="sportswear">Sportswear</option>
             </select>
           </div>
         </div>

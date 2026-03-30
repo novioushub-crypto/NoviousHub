@@ -2,22 +2,45 @@
 
 import { useState } from 'react'
 import { motion } from 'framer-motion'
+import { useQuery } from '@tanstack/react-query'
+import api from '@/lib/api'
 import { 
   Search, Filter, Eye, Edit, Ban, 
-  Users, UserCheck, UserX, Mail 
+  Users, UserCheck, UserX, Mail, Loader2 
 } from 'lucide-react'
-import Image from 'next/image'
 
 export default function AdminUsersPage() {
   const [searchQuery, setSearchQuery] = useState('')
 
-  const users = [
-    { id: 1, name: 'John Doe', email: 'john@example.com', orders: 12, spent: 1299.99, status: 'active', joined: '2026-01-15' },
-    { id: 2, name: 'Jane Smith', email: 'jane@example.com', orders: 8, spent: 899.99, status: 'active', joined: '2026-02-20' },
-    { id: 3, name: 'Bob Johnson', email: 'bob@example.com', orders: 5, spent: 549.99, status: 'active', joined: '2026-03-10' },
-    { id: 4, name: 'Alice Brown', email: 'alice@example.com', orders: 15, spent: 1899.99, status: 'active', joined: '2025-12-05' },
-    { id: 5, name: 'Charlie Wilson', email: 'charlie@example.com', orders: 0, spent: 0, status: 'inactive', joined: '2026-03-25' },
-  ]
+  const { data: usersData, isLoading } = useQuery({
+    queryKey: ['admin-users'],
+    queryFn: async () => {
+      const response = await api.get('/auth/users/')
+      return response.data
+    },
+  })
+
+  const users = usersData?.results || usersData || []
+  const totalUsers = users.length
+  const activeUsers = users.filter((u: any) => u.is_active).length
+  const inactiveUsers = totalUsers - activeUsers
+
+  const filteredUsers = users.filter((user: any) => {
+    const searchLower = searchQuery.toLowerCase()
+    return (
+      user.email?.toLowerCase().includes(searchLower) ||
+      user.first_name?.toLowerCase().includes(searchLower) ||
+      user.last_name?.toLowerCase().includes(searchLower)
+    )
+  })
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen pt-24 pb-16 flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-accent" />
+      </div>
+    )
+  }
 
   return (
     <div className="min-h-screen pt-24 pb-16 bg-surface dark:bg-dark-surface">
@@ -41,7 +64,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div>
                   <p className="text-text-secondary text-sm">Total Users</p>
-                  <p className="text-2xl font-bold">856</p>
+                  <p className="text-2xl font-bold">{totalUsers}</p>
                 </div>
               </div>
             </div>
@@ -52,7 +75,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div>
                   <p className="text-text-secondary text-sm">Active Users</p>
-                  <p className="text-2xl font-bold">789</p>
+                  <p className="text-2xl font-bold">{activeUsers}</p>
                 </div>
               </div>
             </div>
@@ -63,7 +86,7 @@ export default function AdminUsersPage() {
                 </div>
                 <div>
                   <p className="text-text-secondary text-sm">Inactive</p>
-                  <p className="text-2xl font-bold">67</p>
+                  <p className="text-2xl font-bold">{inactiveUsers}</p>
                 </div>
               </div>
             </div>
@@ -76,16 +99,12 @@ export default function AdminUsersPage() {
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-text-secondary" />
                 <input
                   type="text"
-                  placeholder="Search users..."
+                  placeholder="Search users by name or email..."
                   value={searchQuery}
                   onChange={(e) => setSearchQuery(e.target.value)}
                   className="input pl-10 w-full"
                 />
               </div>
-              <button className="btn-outline inline-flex items-center gap-2">
-                <Filter className="w-5 h-5" />
-                More Filters
-              </button>
             </div>
           </div>
 
@@ -97,70 +116,72 @@ export default function AdminUsersPage() {
                   <tr>
                     <th className="px-6 py-4 text-left text-sm font-semibold">User</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Email</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Orders</th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold">Total Spent</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Status</th>
+                    <th className="px-6 py-4 text-left text-sm font-semibold">Verified</th>
                     <th className="px-6 py-4 text-left text-sm font-semibold">Joined</th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold">Actions</th>
                   </tr>
                 </thead>
                 <tbody className="divide-y divide-gray-200 dark:divide-gray-700">
-                  {users.map((user) => (
-                    <motion.tr
-                      key={user.id}
-                      initial={{ opacity: 0 }}
-                      animate={{ opacity: 1 }}
-                      className="hover:bg-surface dark:hover:bg-card-dark transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-3">
-                          <div className="relative w-10 h-10 rounded-full overflow-hidden bg-brand">
-                            <div className="w-full h-full flex items-center justify-center text-white font-bold">
-                              {user.name.charAt(0)}
+                  {filteredUsers.length === 0 ? (
+                    <tr>
+                      <td colSpan={5} className="px-6 py-8 text-center text-text-secondary">
+                        No users found
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredUsers.map((user: any) => (
+                      <motion.tr
+                        key={user.id}
+                        initial={{ opacity: 0 }}
+                        animate={{ opacity: 1 }}
+                        className="hover:bg-surface dark:hover:bg-card-dark transition-colors"
+                      >
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-3">
+                            <div className="relative w-10 h-10 rounded-full overflow-hidden bg-gradient-to-br from-accent to-gold">
+                              <div className="w-full h-full flex items-center justify-center text-white font-bold">
+                                {(user.first_name || user.email).charAt(0).toUpperCase()}
+                              </div>
                             </div>
+                            <p className="font-semibold">
+                              {user.first_name && user.last_name 
+                                ? `${user.first_name} ${user.last_name}` 
+                                : user.email.split('@')[0]}
+                            </p>
                           </div>
-                          <p className="font-semibold">{user.name}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center gap-2">
-                          <Mail className="w-4 h-4 text-text-secondary" />
-                          <p className="text-text-secondary">{user.email}</p>
-                        </div>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p>{user.orders} orders</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="font-semibold">${user.spent.toFixed(2)}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className={`px-3 py-1 rounded-full text-sm capitalize ${
-                          user.status === 'active' 
-                            ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
-                            : 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
-                        }`}>
-                          {user.status}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <p className="text-text-secondary">{user.joined}</p>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <button className="p-2 hover:bg-surface dark:hover:bg-card-dark rounded-lg transition-colors">
-                            <Eye className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 hover:bg-surface dark:hover:bg-card-dark rounded-lg transition-colors">
-                            <Edit className="w-4 h-4" />
-                          </button>
-                          <button className="p-2 hover:bg-red-50 dark:hover:bg-red-900/20 text-red-600 rounded-lg transition-colors">
-                            <Ban className="w-4 h-4" />
-                          </button>
-                        </div>
-                      </td>
-                    </motion.tr>
-                  ))}
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex items-center gap-2">
+                            <Mail className="w-4 h-4 text-text-secondary" />
+                            <p className="text-text-secondary">{user.email}</p>
+                          </div>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-sm capitalize ${
+                            user.is_active 
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400'
+                              : 'bg-gray-100 dark:bg-gray-900/30 text-gray-600 dark:text-gray-400'
+                          }`}>
+                            {user.is_active ? 'Active' : 'Inactive'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <span className={`px-3 py-1 rounded-full text-sm ${
+                            user.is_verified 
+                              ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400'
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-600 dark:text-yellow-400'
+                          }`}>
+                            {user.is_verified ? 'Verified' : 'Pending'}
+                          </span>
+                        </td>
+                        <td className="px-6 py-4">
+                          <p className="text-text-secondary">
+                            {new Date(user.date_joined).toLocaleDateString()}
+                          </p>
+                        </td>
+                      </motion.tr>
+                    ))
+                  )}
                 </tbody>
               </table>
             </div>
