@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react'
 import { useCartStore } from '@/lib/store/cartStore'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useRouter } from 'next/navigation'
-import { Loader2, CreditCard, Lock, CheckCircle } from 'lucide-react'
+import { Loader2, Banknote, Lock, CheckCircle } from 'lucide-react'
 import api from '@/lib/api'
 import Image from 'next/image'
 
@@ -35,13 +35,6 @@ export default function CheckoutPage() {
     country: 'US',
   })
 
-  const [paymentData, setPaymentData] = useState({
-    card_number: '',
-    card_name: '',
-    expiry_date: '',
-    cvv: '',
-  })
-
   const subtotal = getTotalPrice()
   const shipping = subtotal > 200 ? 0 : 10
   const tax = subtotal * 0.08 // 8% tax
@@ -69,7 +62,7 @@ export default function CheckoutPage() {
         shipping_cost: shipping.toFixed(2),
         tax_amount: tax.toFixed(2),
         total: total.toFixed(2),
-        payment_method: 'card',
+        payment_method: 'cod', // Cash on Delivery
       }
 
       // Create order
@@ -266,78 +259,73 @@ export default function CheckoutPage() {
               </form>
             )}
 
-            {/* Step 2: Payment */}
+            {/* Step 2: Payment Method (COD) */}
             {step === 2 && (
               <form onSubmit={handlePaymentSubmit} className="card">
                 <h2 className="text-2xl font-bold mb-6 flex items-center gap-2">
-                  <CreditCard className="w-6 h-6" />
-                  Payment Information
+                  <Banknote className="w-6 h-6" />
+                  Payment Method
                 </h2>
 
-                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6 flex items-start gap-3">
-                  <Lock className="w-5 h-5 text-blue-600 dark:text-blue-400 mt-0.5" />
-                  <div className="text-sm text-blue-800 dark:text-blue-200">
-                    <p className="font-semibold mb-1">Secure Payment</p>
-                    <p>Your payment information is encrypted and secure.</p>
-                  </div>
-                </div>
-
-                <div className="space-y-4">
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">Card Number</label>
-                    <input
-                      type="text"
-                      required
-                      value={paymentData.card_number}
-                      onChange={(e) => setPaymentData({ ...paymentData, card_number: e.target.value })}
-                      className="input"
-                      placeholder="1234 5678 9012 3456"
-                      maxLength={19}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="block text-sm font-semibold mb-2">Cardholder Name</label>
-                    <input
-                      type="text"
-                      required
-                      value={paymentData.card_name}
-                      onChange={(e) => setPaymentData({ ...paymentData, card_name: e.target.value })}
-                      className="input"
-                      placeholder="John Doe"
-                    />
-                  </div>
-
-                  <div className="grid grid-cols-2 gap-4">
-                    <div>
-                      <label className="block text-sm font-semibold mb-2">Expiry Date</label>
-                      <input
-                        type="text"
-                        required
-                        value={paymentData.expiry_date}
-                        onChange={(e) => setPaymentData({ ...paymentData, expiry_date: e.target.value })}
-                        className="input"
-                        placeholder="MM/YY"
-                        maxLength={5}
-                      />
+                <div className="bg-green-50 dark:bg-green-900/20 border border-green-200 dark:border-green-800 rounded-lg p-6 mb-6">
+                  <div className="flex items-start gap-4">
+                    <div className="w-12 h-12 bg-green-100 dark:bg-green-900/40 rounded-full flex items-center justify-center flex-shrink-0">
+                      <Lock className="w-6 h-6 text-green-600 dark:text-green-400" />
                     </div>
-
                     <div>
-                      <label className="block text-sm font-semibold mb-2">CVV</label>
-                      <input
-                        type="text"
-                        required
-                        value={paymentData.cvv}
-                        onChange={(e) => setPaymentData({ ...paymentData, cvv: e.target.value })}
-                        className="input"
-                        placeholder="123"
-                        maxLength={4}
-                      />
+                      <h3 className="font-bold text-lg text-green-800 dark:text-green-200 mb-2">
+                        Cash on Delivery (COD)
+                      </h3>
+                      <p className="text-sm text-green-700 dark:text-green-300 mb-3">
+                        Pay with cash when your order is delivered to your doorstep. No need for credit or debit cards!
+                      </p>
+                      <ul className="space-y-2 text-sm text-green-700 dark:text-green-300">
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>Pay only when you receive your order</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>No online payment required</span>
+                        </li>
+                        <li className="flex items-center gap-2">
+                          <CheckCircle className="w-4 h-4" />
+                          <span>100% secure and convenient</span>
+                        </li>
+                      </ul>
                     </div>
                   </div>
                 </div>
 
-                <div className="flex gap-4 mt-6">
+                <div className="bg-blue-50 dark:bg-blue-900/20 border border-blue-200 dark:border-blue-800 rounded-lg p-4 mb-6">
+                  <p className="text-sm text-blue-800 dark:text-blue-200">
+                    <strong>Note:</strong> Please keep the exact amount ready when the delivery arrives. Our delivery partner will collect <strong className="text-accent">${total.toFixed(2)}</strong> in cash.
+                  </p>
+                </div>
+
+                <div className="space-y-4 mb-6">
+                  <h3 className="font-semibold text-lg">Order Summary</h3>
+                  <div className="bg-surface dark:bg-gray-800 rounded-lg p-4 space-y-2">
+                    <div className="flex justify-between text-sm">
+                      <span>Subtotal</span>
+                      <span>${subtotal.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Shipping</span>
+                      <span>{shipping === 0 ? 'FREE' : `$${shipping.toFixed(2)}`}</span>
+                    </div>
+                    <div className="flex justify-between text-sm">
+                      <span>Tax</span>
+                      <span>${tax.toFixed(2)}</span>
+                    </div>
+                    <div className="flex justify-between text-lg font-bold pt-2 border-t border-gray-300 dark:border-gray-600">
+                      <span>Total (COD)</span>
+                      <span className="text-accent">${total.toFixed(2)}</span>
+                    </div>
+                  </div>
+                </div>
+
+                <div className="flex gap-4">
                   <button
                     type="button"
                     onClick={() => setStep(1)}
@@ -351,7 +339,7 @@ export default function CheckoutPage() {
                     className="btn-primary flex-1 flex items-center justify-center gap-2"
                   >
                     {loading && <Loader2 className="w-5 h-5 animate-spin" />}
-                    {loading ? 'Processing...' : `Pay $${total.toFixed(2)}`}
+                    {loading ? 'Placing Order...' : 'Place Order'}
                   </button>
                 </div>
               </form>
