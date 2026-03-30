@@ -1,5 +1,5 @@
 import Link from 'next/link'
-import { Home, Search, ShoppingBag, ArrowLeft } from 'lucide-react'
+import { Home, Search, ShoppingBag } from 'lucide-react'
 
 export default function NotFound() {
   return (
@@ -48,13 +48,13 @@ export default function NotFound() {
           </Link>
         </div>
 
-        <button
-          onClick={() => window.history.back()}
-          className="btn-outline inline-flex items-center gap-2"
+        <Link
+          href="/"
+          className="btn-primary inline-flex items-center gap-2"
         >
-          <ArrowLeft className="w-4 h-4" />
-          Go Back
-        </button>
+          <Home className="w-4 h-4" />
+          Return Home
+        </Link>
       </div>
     </div>
   )

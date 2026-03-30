@@ -16,10 +16,22 @@ export default function WelcomeModal() {
 
   useEffect(() => {
     // Check if user has already seen the welcome modal
-    const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
-    if (!hasSeenWelcome) {
-      // Show modal after a short delay
-      setTimeout(() => setIsOpen(true), 1000)
+    const checkWelcome = () => {
+      try {
+        const hasSeenWelcome = localStorage.getItem('hasSeenWelcome')
+        if (!hasSeenWelcome) {
+          // Show modal after a short delay
+          setTimeout(() => setIsOpen(true), 1000)
+        }
+      } catch (error) {
+        // Handle localStorage errors during build
+        console.error('Error accessing localStorage:', error)
+      }
+    }
+    
+    // Only run on client side
+    if (typeof window !== 'undefined') {
+      checkWelcome()
     }
   }, [])
 
@@ -31,10 +43,14 @@ export default function WelcomeModal() {
   }
 
   const handleContinue = () => {
-    // Save preference
-    localStorage.setItem('hasSeenWelcome', 'true')
-    if (selectedCategory) {
-      localStorage.setItem('preferredCategory', selectedCategory)
+    try {
+      // Save preference
+      localStorage.setItem('hasSeenWelcome', 'true')
+      if (selectedCategory) {
+        localStorage.setItem('preferredCategory', selectedCategory)
+      }
+    } catch (error) {
+      console.error('Error saving to localStorage:', error)
     }
     
     setIsOpen(false)
@@ -50,7 +66,11 @@ export default function WelcomeModal() {
   }
 
   const handleSkip = () => {
-    localStorage.setItem('hasSeenWelcome', 'true')
+    try {
+      localStorage.setItem('hasSeenWelcome', 'true')
+    } catch (error) {
+      console.error('Error saving to localStorage:', error)
+    }
     setIsOpen(false)
   }
 
