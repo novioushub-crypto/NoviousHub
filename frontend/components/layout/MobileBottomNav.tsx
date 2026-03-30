@@ -38,7 +38,7 @@ export default function MobileBottomNav() {
     {
       href: '/account/orders',
       icon: MapPin,
-      label: 'Tracking',
+      label: 'Orders',
       active: pathname?.startsWith('/account/orders'),
     },
     {
@@ -57,8 +57,8 @@ export default function MobileBottomNav() {
   ]
 
   return (
-    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-brand border-t border-gray-200 dark:border-gray-700 shadow-lg">
-      <div className="flex items-center justify-around h-16 px-2">
+    <nav className="md:hidden fixed bottom-0 left-0 right-0 z-50 bg-white dark:bg-brand border-t border-gray-200 dark:border-gray-700 shadow-lg safe-area-bottom">
+      <div className="flex items-center justify-around h-16 px-1">
         {navItems.map((item) => {
           const Icon = item.icon
           const isActive = item.active
@@ -67,25 +67,25 @@ export default function MobileBottomNav() {
             <Link
               key={item.href}
               href={item.href}
-              className={`flex flex-col items-center justify-center flex-1 h-full relative transition-colors ${
+              className={`flex flex-col items-center justify-center flex-1 h-full relative transition-all duration-200 ${
                 isActive
-                  ? 'text-accent'
-                  : 'text-gray-500 dark:text-gray-400 hover:text-accent'
+                  ? 'text-accent scale-105'
+                  : 'text-gray-500 dark:text-gray-400 hover:text-accent active:scale-95'
               }`}
             >
               <div className="relative">
-                <Icon className="w-6 h-6" />
+                <Icon className={`w-6 h-6 ${isActive ? 'stroke-[2.5]' : 'stroke-2'}`} />
                 {item.badge && item.badge > 0 && (
-                  <span className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center font-semibold">
-                    {item.badge > 9 ? '9+' : item.badge}
+                  <span className="absolute -top-2 -right-2 bg-accent text-white text-[10px] rounded-full min-w-[18px] h-[18px] flex items-center justify-center font-bold px-1 shadow-md">
+                    {item.badge > 99 ? '99+' : item.badge}
                   </span>
                 )}
               </div>
-              <span className={`text-xs mt-1 font-medium ${isActive ? 'font-semibold' : ''}`}>
+              <span className={`text-[10px] mt-0.5 font-medium ${isActive ? 'font-bold' : ''}`}>
                 {item.label}
               </span>
               {isActive && (
-                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-12 h-1 bg-accent rounded-b-full" />
+                <div className="absolute top-0 left-1/2 -translate-x-1/2 w-10 h-1 bg-accent rounded-b-full" />
               )}
             </Link>
           )

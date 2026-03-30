@@ -14,6 +14,7 @@ export default function MyOrdersPage() {
       const response = await api.get('/orders/')
       return response.data
     },
+    refetchInterval: 5000, // Auto-refresh every 5 seconds for live status updates
   })
 
   const getStatusIcon = (status: string) => {

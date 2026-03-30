@@ -29,6 +29,7 @@ export default function TrackOrderPage() {
       const response = await api.get(`/orders/?order_number=${orderNumber}`)
       return response.data.results?.[0] || response.data[0]
     },
+    refetchInterval: 3000, // Auto-refresh every 3 seconds for live updates
   })
 
   const trackingSteps = useMemo(() => [

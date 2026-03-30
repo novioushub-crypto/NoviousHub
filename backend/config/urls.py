@@ -28,6 +28,7 @@ urlpatterns = [
         path('', include('apps.wishlist.urls')),
         path('', include('apps.payments.urls')),
         path('', include('apps.search.urls')),
+        path('analytics/', include('apps.analytics.urls')),
         
         # API Schema
         path('schema/', SpectacularAPIView.as_view(), name='schema'),

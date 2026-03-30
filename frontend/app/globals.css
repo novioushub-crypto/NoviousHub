@@ -104,3 +104,15 @@
 .leaflet-tile-container img {
   @apply max-w-none;
 }
+
+/* Safe area for mobile devices (notch support) */
+.safe-area-bottom {
+  padding-bottom: env(safe-area-inset-bottom);
+}
+
+/* Ensure content doesn't get hidden behind bottom nav on mobile */
+@media (max-width: 768px) {
+  body {
+    padding-bottom: calc(64px + env(safe-area-inset-bottom));
+  }
+}
