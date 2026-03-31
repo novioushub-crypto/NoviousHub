@@ -12,7 +12,9 @@ interface Product {
   name: string
   slug: string
   price: string
-  images: Array<{ image_url: string }>
+  base_price?: string
+  primary_image?: string
+  images: Array<{ image_url: string; is_primary?: boolean }>
   category: { name: string }
 }
 
@@ -176,38 +178,44 @@ export default function HomePage() {
               className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
               style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
             >
-              {featuredProducts.map((product) => (
-                <div
-                  key={product.id}
-                  className="flex-shrink-0 w-72"
-                >
-                  <Link href={`/products/${product.slug}`} className="group block">
-                    <div className="relative h-80 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4">
-                      {product.images?.[0]?.image_url ? (
+              {featuredProducts.map((product) => {
+                // Handle both list and detail product formats
+                const primaryImage = product.primary_image || 
+                                   product.images?.find((img) => img.is_primary)?.image_url || 
+                                   product.images?.[0]?.image_url ||
+                                   'https://via.placeholder.com/400'
+                
+                const productPrice = product.base_price || product.price
+
+                return (
+                  <div
+                    key={product.id}
+                    className="flex-shrink-0 w-72"
+                  >
+                    <Link href={`/products/${product.slug}`} className="group block">
+                      <div className="relative h-80 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4">
                         <Image
-                          src={product.images[0].image_url}
+                          src={primaryImage}
                           alt={product.name}
                           fill
+                          sizes="(max-width: 768px) 100vw, (max-width: 1200px) 50vw, 33vw"
                           className="object-cover transition-transform duration-500 group-hover:scale-110"
+                          unoptimized={primaryImage.includes('placeholder')}
                         />
-                      ) : (
-                        <div className="w-full h-full flex items-center justify-center">
-                          <Star className="w-12 h-12 text-gray-400" />
-                        </div>
-                      )}
-                    </div>
-                    <div className="space-y-2">
-                      <p className="text-sm text-accent font-semibold">{product.category?.name}</p>
-                      <h3 className="font-bold text-lg group-hover:text-accent transition-colors line-clamp-2">
-                        {product.name}
-                      </h3>
-                      <div className="flex items-center justify-between">
-                        <span className="text-2xl font-bold text-accent">${product.price}</span>
                       </div>
-                    </div>
-                  </Link>
-                </div>
-              ))}
+                      <div className="space-y-2">
+                        <p className="text-sm text-accent font-semibold">{product.category?.name}</p>
+                        <h3 className="font-bold text-lg group-hover:text-accent transition-colors line-clamp-2">
+                          {product.name}
+                        </h3>
+                        <div className="flex items-center justify-between">
+                          <span className="text-2xl font-bold text-accent">${productPrice}</span>
+                        </div>
+                      </div>
+                    </Link>
+                  </div>
+                )
+              })}
             </div>
           )}
 
