@@ -51,7 +51,7 @@ export default function SearchModal({ isOpen, onClose }: SearchModalProps) {
 
     setLoading(true)
     try {
-      const response = await api.get(`/api/v1/products/?search=${encodeURIComponent(query)}`)
+      const response = await api.get(`/products/?search=${encodeURIComponent(query)}`)
       setResults(response.data.results || [])
     } catch (error) {
       console.error('Search error:', error)

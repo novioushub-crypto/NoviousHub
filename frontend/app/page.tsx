@@ -3,9 +3,47 @@
 import { motion } from 'framer-motion'
 import Link from 'next/link'
 import Image from 'next/image'
-import { ArrowRight, Star } from 'lucide-react'
+import { ArrowRight, Star, ChevronLeft, ChevronRight } from 'lucide-react'
+import { useEffect, useState, useRef } from 'react'
+import api from '@/lib/api'
+
+interface Product {
+  id: number
+  name: string
+  slug: string
+  price: string
+  images: Array<{ image_url: string }>
+  category: { name: string }
+}
 
 export default function HomePage() {
+  const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
+  const [loading, setLoading] = useState(true)
+  const scrollRef = useRef<HTMLDivElement>(null)
+
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        const response = await api.get('/products/?page_size=8')
+        setFeaturedProducts(response.data.results || [])
+      } catch (error) {
+        console.error('Error fetching products:', error)
+      } finally {
+        setLoading(false)
+      }
+    }
+    fetchProducts()
+  }, [])
+
+  const scroll = (direction: 'left' | 'right') => {
+    if (scrollRef.current) {
+      const scrollAmount = 400
+      scrollRef.current.scrollBy({
+        left: direction === 'left' ? -scrollAmount : scrollAmount,
+        behavior: 'smooth'
+      })
+    }
+  }
   return (
     <div className="min-h-screen">
       {/* Hero Section */}
@@ -98,6 +136,88 @@ export default function HomePage() {
                   </span>
                 </div>
               </div>
+            </Link>
+          </div>
+        </div>
+      </section>
+
+      {/* Featured Products - Horizontal Scroll */}
+      <section className="py-20 px-4 bg-surface dark:bg-surface-dark">
+        <div className="max-w-7xl mx-auto">
+          <div className="flex items-center justify-between mb-8">
+            <h2 className="text-3xl md:text-4xl font-display font-bold">
+              Featured Products
+            </h2>
+            <div className="hidden md:flex gap-2">
+              <button
+                onClick={() => scroll('left')}
+                className="p-2 rounded-full bg-white dark:bg-card-dark hover:bg-accent hover:text-white transition-colors shadow-md"
+                aria-label="Scroll left"
+              >
+                <ChevronLeft className="w-6 h-6" />
+              </button>
+              <button
+                onClick={() => scroll('right')}
+                className="p-2 rounded-full bg-white dark:bg-card-dark hover:bg-accent hover:text-white transition-colors shadow-md"
+                aria-label="Scroll right"
+              >
+                <ChevronRight className="w-6 h-6" />
+              </button>
+            </div>
+          </div>
+
+          {loading ? (
+            <div className="flex justify-center py-12">
+              <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-accent" />
+            </div>
+          ) : (
+            <div 
+              ref={scrollRef}
+              className="flex gap-6 overflow-x-auto pb-4 scrollbar-hide"
+              style={{ scrollbarWidth: 'none', msOverflowStyle: 'none' }}
+            >
+              {featuredProducts.map((product) => (
+                <div
+                  key={product.id}
+                  className="flex-shrink-0 w-72"
+                >
+                  <Link href={`/products/${product.slug}`} className="group block">
+                    <div className="relative h-80 bg-gray-100 dark:bg-gray-800 rounded-xl overflow-hidden mb-4">
+                      {product.images?.[0]?.image_url ? (
+                        <Image
+                          src={product.images[0].image_url}
+                          alt={product.name}
+                          fill
+                          className="object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                      ) : (
+                        <div className="w-full h-full flex items-center justify-center">
+                          <Star className="w-12 h-12 text-gray-400" />
+                        </div>
+                      )}
+                    </div>
+                    <div className="space-y-2">
+                      <p className="text-sm text-accent font-semibold">{product.category?.name}</p>
+                      <h3 className="font-bold text-lg group-hover:text-accent transition-colors line-clamp-2">
+                        {product.name}
+                      </h3>
+                      <div className="flex items-center justify-between">
+                        <span className="text-2xl font-bold text-accent">${product.price}</span>
+                      </div>
+                    </div>
+                  </Link>
+                </div>
+              ))}
+            </div>
+          )}
+
+          <div className="text-center mt-8">
+            <Link 
+              href="/products" 
+              className="btn-primary inline-flex items-center gap-2"
+            >
+              View All Products
+              <ArrowRight className="w-5 h-5" />
             </Link>
           </div>
         </div>

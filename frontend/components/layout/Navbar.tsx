@@ -97,22 +97,25 @@ export default function Navbar() {
               <Search className="w-6 h-6" />
             </button>
             
-            {/* Theme Toggle - Desktop (Icon) */}
+            {/* Theme Toggle - Switch for both Mobile & Desktop */}
             {mounted && (
               <button
                 onClick={toggleTheme}
-                className={`hidden md:block ${textColor} hover:text-accent transition-colors`}
+                className={`relative inline-flex h-7 w-12 items-center rounded-full transition-colors ${
+                  theme === 'dark' ? 'bg-accent' : 'bg-gray-300'
+                }`}
                 aria-label="Toggle theme"
               >
-                {theme === 'dark' ? (
-                  <Sun className="w-6 h-6" />
-                ) : (
-                  <Moon className="w-6 h-6" />
-                )}
+                <span
+                  className={`inline-block h-5 w-5 transform rounded-full bg-white transition-transform ${
+                    theme === 'dark' ? 'translate-x-6' : 'translate-x-1'
+                  }`}
+                />
               </button>
             )}
             
-            <Link href="/account/wishlist" className={`relative ${textColor}`}>
+            {/* Wishlist - Desktop Only */}
+            <Link href="/account/wishlist" className={`hidden md:block relative ${textColor} hover:text-accent transition-colors`}>
               <Heart className="w-6 h-6" />
               {mounted && wishlistItems.length > 0 && (
                 <span className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -120,7 +123,9 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            <Link href="/cart" className={`relative ${textColor}`}>
+            
+            {/* Cart - Desktop Only */}
+            <Link href="/cart" className={`hidden md:block relative ${textColor} hover:text-accent transition-colors`}>
               <ShoppingCart className="w-6 h-6" />
               {mounted && totalItems > 0 && (
                 <span className="absolute -top-2 -right-2 bg-accent text-white text-xs rounded-full w-5 h-5 flex items-center justify-center">
@@ -128,7 +133,9 @@ export default function Navbar() {
                 </span>
               )}
             </Link>
-            <Link href={isAuthenticated ? '/account' : '/auth/login'} className={textColor}>
+            
+            {/* User - Desktop Only */}
+            <Link href={isAuthenticated ? '/account' : '/auth/login'} className={`hidden md:block ${textColor} hover:text-accent transition-colors`}>
               <User className="w-6 h-6" />
             </Link>
 
@@ -182,34 +189,6 @@ export default function Navbar() {
                 >
                   Track Orders
                 </Link>
-              )}
-              
-              {/* Theme Toggle - Mobile (Switch) */}
-              {mounted && (
-                <div className="flex items-center justify-between pt-4 border-t border-gray-200 dark:border-gray-700">
-                  <span className="text-brand dark:text-white font-semibold">
-                    Dark Mode
-                  </span>
-                  <button
-                    onClick={toggleTheme}
-                    className={`relative inline-flex h-8 w-14 items-center rounded-full transition-colors ${
-                      theme === 'dark' ? 'bg-accent' : 'bg-gray-300'
-                    }`}
-                    aria-label="Toggle theme"
-                  >
-                    <span
-                      className={`inline-block h-6 w-6 transform rounded-full bg-white transition-transform ${
-                        theme === 'dark' ? 'translate-x-7' : 'translate-x-1'
-                      }`}
-                    >
-                      {theme === 'dark' ? (
-                        <Moon className="w-4 h-4 text-accent m-1" />
-                      ) : (
-                        <Sun className="w-4 h-4 text-gray-500 m-1" />
-                      )}
-                    </span>
-                  </button>
-                </div>
               )}
             </div>
           </div>
