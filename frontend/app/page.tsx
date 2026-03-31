@@ -22,6 +22,7 @@ export default function HomePage() {
   const [featuredProducts, setFeaturedProducts] = useState<Product[]>([])
   const [loading, setLoading] = useState(true)
   const scrollRef = useRef<HTMLDivElement>(null)
+  const [isAutoScrolling, setIsAutoScrolling] = useState(true)
 
   useEffect(() => {
     const fetchProducts = async () => {
@@ -37,13 +38,56 @@ export default function HomePage() {
     fetchProducts()
   }, [])
 
+  // Auto-scroll effect
+  useEffect(() => {
+    if (!scrollRef.current || !isAutoScrolling || featuredProducts.length === 0) return
+
+    const scrollContainer = scrollRef.current
+    let scrollInterval: NodeJS.Timeout
+
+    const startAutoScroll = () => {
+      scrollInterval = setInterval(() => {
+        if (scrollContainer) {
+          const maxScroll = scrollContainer.scrollWidth - scrollContainer.clientWidth
+          const currentScroll = scrollContainer.scrollLeft
+
+          // If reached the end, scroll back to start
+          if (currentScroll >= maxScroll - 10) {
+            scrollContainer.scrollTo({ left: 0, behavior: 'smooth' })
+          } else {
+            // Scroll by 1 pixel for smooth continuous scroll
+            scrollContainer.scrollBy({ left: 1, behavior: 'auto' })
+          }
+        }
+      }, 20) // Adjust speed here (lower = faster)
+    }
+
+    startAutoScroll()
+
+    // Pause auto-scroll on hover
+    const handleMouseEnter = () => setIsAutoScrolling(false)
+    const handleMouseLeave = () => setIsAutoScrolling(true)
+
+    scrollContainer.addEventListener('mouseenter', handleMouseEnter)
+    scrollContainer.addEventListener('mouseleave', handleMouseLeave)
+
+    return () => {
+      clearInterval(scrollInterval)
+      scrollContainer.removeEventListener('mouseenter', handleMouseEnter)
+      scrollContainer.removeEventListener('mouseleave', handleMouseLeave)
+    }
+  }, [isAutoScrolling, featuredProducts])
+
   const scroll = (direction: 'left' | 'right') => {
     if (scrollRef.current) {
       const scrollAmount = 400
+      setIsAutoScrolling(false) // Pause auto-scroll when manually scrolling
       scrollRef.current.scrollBy({
         left: direction === 'left' ? -scrollAmount : scrollAmount,
         behavior: 'smooth'
       })
+      // Resume auto-scroll after 3 seconds
+      setTimeout(() => setIsAutoScrolling(true), 3000)
     }
   }
   return (

@@ -9,6 +9,7 @@ import StructuredData from '@/components/seo/StructuredData'
 import { generateOrganizationSchema, generateWebsiteSchema } from '@/lib/seo'
 import { Analytics } from '@vercel/analytics/react'
 import { SpeedInsights } from '@vercel/speed-insights/next'
+import { Toaster } from 'react-hot-toast'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -110,6 +111,28 @@ export default function RootLayout({
       <body className={`${inter.variable} ${playfair.variable} font-sans antialiased`}>
         <GoogleAnalytics />
         <StructuredData data={[organizationSchema, websiteSchema]} />
+        <Toaster 
+          position="top-right"
+          toastOptions={{
+            duration: 3000,
+            style: {
+              background: '#1A1A2E',
+              color: '#fff',
+            },
+            success: {
+              iconTheme: {
+                primary: '#10B981',
+                secondary: '#fff',
+              },
+            },
+            error: {
+              iconTheme: {
+                primary: '#E94560',
+                secondary: '#fff',
+              },
+            },
+          }}
+        />
         <Providers>
           <WelcomeModal />
           <ConditionalLayout>
