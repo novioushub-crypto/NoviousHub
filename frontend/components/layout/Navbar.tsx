@@ -8,11 +8,13 @@ import { useCartStore } from '@/lib/store/cartStore'
 import { useAuthStore } from '@/lib/store/authStore'
 import { useWishlistStore } from '@/lib/store/wishlistStore'
 import { useThemeStore } from '@/lib/store/themeStore'
+import SearchModal from '@/components/search/SearchModal'
 
 export default function Navbar() {
   const pathname = usePathname()
   const [isScrolled, setIsScrolled] = useState(false)
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
+  const [isSearchOpen, setIsSearchOpen] = useState(false)
   const [mounted, setMounted] = useState(false)
   const totalItems = useCartStore((state) => state.getTotalItems())
   const wishlistItems = useWishlistStore((state) => state.items)
@@ -87,7 +89,11 @@ export default function Navbar() {
 
           {/* Icons */}
           <div className="flex items-center gap-4">
-            <button className={textColor}>
+            <button 
+              onClick={() => setIsSearchOpen(true)}
+              className={`${textColor} hover:text-accent transition-colors`}
+              aria-label="Search"
+            >
               <Search className="w-6 h-6" />
             </button>
             
@@ -209,6 +215,9 @@ export default function Navbar() {
           </div>
         )}
       </div>
+
+      {/* Search Modal */}
+      <SearchModal isOpen={isSearchOpen} onClose={() => setIsSearchOpen(false)} />
     </nav>
   )
 }
